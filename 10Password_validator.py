@@ -37,7 +37,7 @@ def password_check(password):
         return 'Strong pasword'
     else:
         return f'Weak password. {', '.join(missing_requirements)}' #join makes the output readable for the user
-    
-my_pass=input('Enter your password: ')
-print(password_check(my_pass))
+if __name__ == "__main__":  
+    my_pass=input('Enter your password: ')
+    print(password_check(my_pass))
 
