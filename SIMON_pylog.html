@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simon's Python Learning Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f;
+    --surface: #161618;
+    --surface2: #1e1e21;
+    --border: #2a2a2e;
+    --border2: #3a3a3f;
+    --text: #f0efe8;
+    --muted: #888884;
+    --hint: #555552;
+    --accent: #b8ff57;
+    --accent2: #57c4ff;
+    --accent3: #ff7857;
+    --easy: #b8ff57;
+    --easy-bg: #1a2a0a;
+    --med: #ffd557;
+    --med-bg: #2a220a;
+    --hard: #ff7857;
+    --hard-bg: #2a120a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; min-height: 100vh; }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3; pointer-events: none; z-index: 0;
+  }
+  .container { max-width: 860px; margin: 0 auto; padding: 0 24px 80px; position: relative; z-index: 1; }
+
+  header { padding: 48px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+  .logo { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; }
+  .logo span { color: var(--accent); }
+  .logo-sub { font-size: 12px; color: var(--muted); margin-top: 6px; font-family: 'DM Mono', monospace; letter-spacing: 0.05em; }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .header-date { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--hint); }
+
+  .backup-row { display: flex; gap: 8px; align-items: center; }
+  .backup-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-export { background: #0d1f2a; border: 1px solid var(--accent2); color: var(--accent2); }
+  .btn-export:hover { background: #122a3a; }
+  .btn-drive { background: #1a2a0a; border: 1px solid var(--accent); color: var(--accent); }
+  .btn-drive:hover { background: #223510; }
+  .btn-import { background: var(--surface2); border: 1px solid var(--border2); color: var(--muted); }
+  .btn-import:hover { color: var(--text); border-color: var(--text); }
+  #file-input { display: none; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 40px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; }
+  .stat::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease; }
+  .stat.active::after { transform: scaleX(1); }
+  .stat-val { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-size: 12px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 40px; }
+  .form-heading { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; font-family: 'DM Mono', monospace; }
+  input[type=text], textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  input[type=text]:focus, textarea:focus { border-color: var(--accent); }
+  textarea { min-height: 80px; resize: vertical; line-height: 1.6; }
+  textarea.code-area { font-family: 'DM Mono', monospace; font-size: 13px; min-height: 65px; }
+
+  .tags-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag { font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); color: var(--muted); cursor: pointer; background: var(--surface2); transition: all 0.15s; font-family: 'DM Mono', monospace; user-select: none; }
+  .tag:hover { border-color: var(--border2); color: var(--text); }
+  .tag.sel-diff-easy  { background: var(--easy-bg); border-color: var(--easy); color: var(--easy); }
+  .tag.sel-diff-medium { background: var(--med-bg); border-color: var(--med); color: var(--med); }
+  .tag.sel-diff-hard  { background: var(--hard-bg); border-color: var(--hard); color: var(--hard); }
+  .tag.sel-skill { background: #0d1f2a; border-color: var(--accent2); color: var(--accent2); }
+
+  .save-btn { background: var(--accent); color: #0e0e0f; border: none; border-radius: 8px; padding: 12px 28px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; letter-spacing: 0.02em; transition: opacity 0.15s, transform 0.1s; margin-top: 6px; }
+  .save-btn:hover { opacity: 0.9; }
+  .save-btn:active { transform: scale(0.98); }
+
+  .entries-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .entries-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; }
+  .entry-count { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+
+  .entry-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 12px; transition: border-color 0.2s; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .entry-card:hover { border-color: var(--border2); }
+  .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 12px; }
+  .entry-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .entry-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--hint); }
+  .diff-badge { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-family: 'DM Mono', monospace; letter-spacing: 0.05em; text-transform: uppercase; }
+  .d-easy  { background: var(--easy-bg); color: var(--easy); border: 1px solid var(--easy); }
+  .d-medium { background: var(--med-bg); color: var(--med); border: 1px solid var(--med); }
+  .d-hard  { background: var(--hard-bg); color: var(--hard); border: 1px solid var(--hard); }
+  .entry-topic { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .entry-notes { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 10px; }
+  .entry-code { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent2); white-space: pre-wrap; word-break: break-all; margin-bottom: 10px; line-height: 1.7; }
+  .entry-skills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .skill-pill { font-size: 11px; padding: 3px 9px; border-radius: 4px; background: #0d1f2a; border: 1px solid #1a3a4a; color: var(--accent2); font-family: 'DM Mono', monospace; }
+  .del-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--hint); cursor: pointer; padding: 5px 9px; font-size: 13px; flex-shrink: 0; transition: all 0.15s; }
+  .del-btn:hover { border-color: var(--hard); color: var(--hard); }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--hint); border: 1px dashed var(--border); border-radius: 12px; font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.8; }
+  .empty span { display: block; font-size: 32px; margin-bottom: 12px; }
+
+  .toast { position: fixed; bottom: 32px; right: 32px; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 13px; padding: 12px 20px; border-radius: 8px; transform: translateY(80px); opacity: 0; transition: all 0.3s ease; z-index: 100; }
+  .toast.green { background: var(--accent); color: #0e0e0f; }
+  .toast.blue  { background: var(--accent2); color: #0e0e0f; }
+  .toast.show  { transform: translateY(0); opacity: 1; }
+
+  .drive-info { background: #0d1f10; border: 1px solid #1a3a1f; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; color: #6abf7a; font-family: 'DM Mono', monospace; line-height: 1.7; display: none; }
+  .drive-info.show { display: block; }
+  .drive-info strong { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: 1fr 1fr; }
+    .stat:last-child { grid-column: span 2; }
+    header { flex-direction: column; align-items: flex-start; }
+    .backup-row { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <div class="logo">SIMON'S<span> PYLOG</span></div>
+      <div class="logo-sub">// python learning journal</div>
+    </div>
+    <div class="header-right">
+      <div class="header-date" id="header-date"></div>
+      <div class="backup-row">
+        <button class="backup-btn btn-export" onclick="exportJSON()" title="Download your entries as a backup file">
+          ↓ export backup
+        </button>
+        <button class="backup-btn btn-drive" onclick="saveToGoogleDrive()" title="Export and open Google Drive to save">
+          ▲ save to drive
+        </button>
+        <button class="backup-btn btn-import" onclick="document.getElementById('file-input').click()" title="Restore entries from a backup file">
+          ↑ import backup
+        </button>
+        <input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
+      </div>
+    </div>
+  </header>
+
+  <div class="drive-info" id="drive-info">
+    <strong>How to save to Google Drive:</strong><br>
+    1. Click "save to drive" — it downloads your backup file automatically.<br>
+    2. Google Drive opens in a new tab — drag the downloaded file in.<br>
+    3. Next time, download from Drive and use "import backup" to restore. ✓
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="stat-sessions">0</div><div class="stat-label">Sessions logged</div></div>
+    <div class="stat"><div class="stat-val" id="stat-topics">0</div><div class="stat-label">Topics covered</div></div>
+    <div class="stat"><div class="stat-val" id="stat-streak">0</div><div class="stat-label">Day streak 🔥</div></div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-heading"><span class="dot"></span> Log a session</div>
+    <div class="field">
+      <label>Topic</label>
+      <input type="text" id="f-topic" placeholder="e.g. Python loops — for, while, break, continue">
+    </div>
+    <div class="field">
+      <label>What you learned / understood</label>
+      <textarea id="f-notes" placeholder="e.g. Understood the difference between break and continue. Fixed a while loop bug..."></textarea>
+    </div>
+    <div class="field">
+      <label>Key code snippet (optional)</label>
+      <textarea class="code-area" id="f-code" placeholder="for i in range(len(numbers)):&#10;    for j in range(i+1, len(numbers)):&#10;        if numbers[i] + numbers[j] == 25:&#10;            print(numbers[i], numbers[j])"></textarea>
+    </div>
+    <div class="field">
+      <label>Difficulty</label>
+      <div class="tags-row" id="diff-tags">
+        <span class="tag" data-val="easy" onclick="pickDiff(this)">Easy</span>
+        <span class="tag" data-val="medium" onclick="pickDiff(this)">Medium</span>
+        <span class="tag" data-val="hard" onclick="pickDiff(this)">Hard</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Skills used</label>
+      <div class="tags-row" id="skill-tags">
+        <span class="tag" onclick="toggleSkill(this)">Variables</span>
+        <span class="tag" onclick="toggleSkill(this)">Lists</span>
+        <span class="tag" onclick="toggleSkill(this)">Loops</span>
+        <span class="tag" onclick="toggleSkill(this)">Functions</span>
+        <span class="tag" onclick="toggleSkill(this)">Dictionaries</span>
+        <span class="tag" onclick="toggleSkill(this)">Conditionals</span>
+        <span class="tag" onclick="toggleSkill(this)">Classes</span>
+        <span class="tag" onclick="toggleSkill(this)">Error handling</span>
+        <span class="tag" onclick="toggleSkill(this)">Comprehensions</span>
+        <span class="tag" onclick="toggleSkill(this)">Nested loops</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="saveEntry()">Save entry →</button>
+  </div>
+
+  <div class="entries-header">
+    <div class="entries-title">All entries</div>
+    <div class="entry-count" id="entry-count"></div>
+  </div>
+  <div id="entries-list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'simon_pylog_entries';
+let entries = [];
+let selectedDiff = '';
+
+function load() {
+  try { entries = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e) { entries = []; }
+}
+function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+}
+
+function calcStreak() {
+  if (!entries.length) return 0;
+  const days = [...new Set(entries.map(e => e.date.slice(0,10)))].sort().reverse();
+  const today = new Date().toISOString().slice(0,10);
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  if (days[0] !== today && days[0] !== yesterday) return 0;
+  let streak = 1;
+  for (let i = 1; i < days.length; i++) {
+    if ((new Date(days[i-1]) - new Date(days[i])) / 86400000 === 1) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function updateStats() {
+  document.getElementById('stat-sessions').textContent = entries.length;
+  const topics = new Set(entries.map(e => e.topic.toLowerCase().split('—')[0].split(':')[0].trim()));
+  document.getElementById('stat-topics').textContent = topics.size;
+  document.getElementById('stat-streak').textContent = calcStreak();
+  document.getElementById('entry-count').textContent = entries.length + ' entr' + (entries.length === 1 ? 'y' : 'ies');
+}
+
+function renderEntries() {
+  const el = document.getElementById('entries-list');
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty"><span>{ }</span>no entries yet — log your first session above.</div>';
+    return;
+  }
+  el.innerHTML = [...entries].reverse().map((e, ri) => {
+    const i = entries.length - 1 - ri;
+    return `<div class="entry-card">
+      <div class="entry-top">
+        <div style="flex:1">
+          <div class="entry-meta">
+            <span class="entry-date">${fmtDate(e.date)}</span>
+            ${e.difficulty ? `<span class="diff-badge d-${e.difficulty}">${e.difficulty}</span>` : ''}
+          </div>
+          <div class="entry-topic">${e.topic}</div>
+        </div>
+        <button class="del-btn" onclick="deleteEntry(${i})">✕</button>
+      </div>
+      ${e.notes ? `<div class="entry-notes">${e.notes}</div>` : ''}
+      ${e.code ? `<div class="entry-code">${e.code}</div>` : ''}
+      ${e.skills && e.skills.length ? `<div class="entry-skills">${e.skills.map(s=>`<span class="skill-pill">${s}</span>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function pickDiff(el) {
+  document.querySelectorAll('#diff-tags .tag').forEach(t => t.classList.remove('sel-diff-easy','sel-diff-medium','sel-diff-hard'));
+  selectedDiff = el.dataset.val;
+  el.classList.add('sel-diff-' + selectedDiff);
+}
+function toggleSkill(el) { el.classList.toggle('sel-skill'); }
+
+function saveEntry() {
+  const topic = document.getElementById('f-topic').value.trim();
+  if (!topic) { document.getElementById('f-topic').focus(); return; }
+  entries.push({
+    date: new Date().toISOString(),
+    topic,
+    notes: document.getElementById('f-notes').value.trim(),
+    code: document.getElementById('f-code').value.trim(),
+    difficulty: selectedDiff,
+    skills: [...document.querySelectorAll('#skill-tags .tag.sel-skill')].map(t => t.textContent)
+  });
+  persist();
+  document.getElementById('f-topic').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-code').value = '';
+  document.querySelectorAll('.tag.sel-skill').forEach(t => t.classList.remove('sel-skill'));
+  document.querySelectorAll('#diff-tags .tag').forEach(t => t.classList.remove('sel-diff-easy','sel-diff-medium','sel-diff-hard'));
+  selectedDiff = '';
+  updateStats();
+  renderEntries();
+  showToast('Entry saved ✓', 'green');
+}
+
+function deleteEntry(i) {
+  if (!confirm('Delete this entry?')) return;
+  entries.splice(i, 1);
+  persist();
+  updateStats();
+  renderEntries();
+}
+
+function exportJSON() {
+  const data = { owner: "Simon Nyokabi", exported: new Date().toISOString(), entries };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'simon_pylog_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  showToast('Backup downloaded ✓', 'blue');
+}
+
+function saveToGoogleDrive() {
+  exportJSON();
+  setTimeout(() => {
+    window.open('https://drive.google.com/drive/u/0/my-drive', '_blank');
+    document.getElementById('drive-info').classList.add('show');
+  }, 600);
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const imported = data.entries || (Array.isArray(data) ? data : []);
+      if (!imported.length) { showToast('No entries found in file', 'blue'); return; }
+      if (confirm(`Import ${imported.length} entries? This will merge with your current entries.`)) {
+        const existing = new Set(entries.map(e => e.date));
+        const newOnes = imported.filter(e => !existing.has(e.date));
+        entries = [...entries, ...newOnes].sort((a,b) => new Date(a.date) - new Date(b.date));
+        persist();
+        updateStats();
+        renderEntries();
+        showToast(`Imported ${newOnes.length} entries ✓`, 'green');
+      }
+    } catch(err) { showToast('Invalid backup file', 'blue'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+load(); updateStats(); renderEntries();
+</script>
+</body>
+</html>
