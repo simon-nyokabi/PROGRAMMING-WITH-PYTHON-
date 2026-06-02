@@ -1,3 +1,14 @@
+# ============================================================
+# DATE    : 31 May 2026
+# TOPIC   : Python Loops
+# LEARNED : Difference between break and continue.
+#           range(i+1, len()) trick to avoid duplicate pairs.
+#           Print before doubling in a while loop.
+# SKILLS  : for, while, break, continue, nested loops
+#1. I fixed a bug where I was using a tuple (1,4 ) in a loop instead of using a range(1,4) to iterate between 1 to 4. 
+#2. Using the while loop to print doubled numbers, I was doubling the value before printing leading to an overrage , by shifting the print statement, I managed to correct the error.
+#3. In order to get pairs of numbers in a list that add to a specific value, I used nested for loops, where I learnt that using range(i+j, len(LIST)) helps me iterate through the numbers once to avoid same pairs but in different order. meaning j always stays ahead of i.
+# ============================================================
 numbers = [4, 17, 3, 29, 8, 42, 15, 7, 23, 11, 36, 2, 19, 50, 6]
 # Use a for loop to print every number and its square side by side, e.g. 4 → 16
 for number in numbers:
