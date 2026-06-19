@@ -21,8 +21,23 @@ book_1.checkout_book()
 book_1.return_book()
 # NOW WE SAVE THE BOOKS USING FILES
 my_book = Book("The Fellowship of the Ring", "J.R.R. Tolkien")
-with open("current_book.txt", "w") as file:
+#using normal method
+'''with open("current_book.txt", "w") as file:
     file.write(my_book.title)
 with open("current_book.txt", "r") as file:
     books = file.read()
-    print(books)
+    print(books)'''
+#USING JSON FILES TO MAKE THE FILE MORE ORGANISED AND STRUCTURED
+import json
+book_data = {
+    "title": my_book.title,
+    "author": my_book.author,
+    "is_available" : my_book.is_available
+}
+
+with open("book_storage.json", "w") as file:
+    json.dump(book_data, file, indent=4 )
+with open("book_storage.json", "r") as file:
+    loaded_data = json.load(file)
+reloaded_data = Book(loaded_data["title"], loaded_data["author"])
+print(reloaded_data.author)
